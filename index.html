@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Placar em Tempo Real</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+    .player { display: inline-block; margin: 15px; padding: 15px; background: white;
+      border-radius: 10px; box-shadow: 0 0 8px #aaa; }
+    button, input { font-size: 16px; margin: 5px; padding: 8px; }
+    .score { font-size: 28px; margin: 10px 0; }
+    table { width: 90%%; margin: 30px auto; border-collapse: collapse;
+      background: white; box-shadow: 0 0 10px #ccc; }
+    th, td { border: 1px solid #ddd; padding: 10px; font-size: 18px; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Placar em Tempo Real</h1>
+  <table>
+    <thead>
+      <tr><th>Posição</th><th>Nome</th><th>Pontos</th></tr>
+    </thead>
+    <tbody id="scoreboardTable"></tbody>
+  </table>
+  <div>
+    <input type="text" id="name" placeholder="Nome" />
+    <input type="number" id="points" placeholder="Pontos" />
+    <button onclick="addPoints()">Somar</button>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const scoreboardTable = document.getElementById("scoreboardTable");
+
+    socket.on("update", (players) => {
+      const sorted = players.sort((a, b) => b.score - a.score);
+      scoreboardTable.innerHTML = "";
+      sorted.forEach((p, i) => {
+        scoreboardTable.innerHTML += `
+          <tr>
+            <td>${i + 1}º</td>
+            <td>${p.name}</td>
+            <td>${p.score}</td>
+          </tr>
+        `;
+      });
+    });
+
+    function addPoints() {
+      const name = document.getElementById("name").value;
+      const points = parseInt(document.getElementById("points").value);
+      if (name && !isNaN(points)) {
+        socket.emit("add", { name, points });
+        document.getElementById("points").value = "";
+      }
+    }
+  </script>
+</body>
+</html>
